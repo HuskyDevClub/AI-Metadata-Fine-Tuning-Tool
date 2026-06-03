@@ -216,7 +216,4 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
-/metadata_store
-/sft_data
-splits.json
-all_metadata.json
+
