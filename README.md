@@ -1,8 +1,8 @@
-# MetadataLearn
+AI-Metadata-Fine-Tuning-Tool
 
 **Automated Dataset Metadata Generation — Fine-Tuning Qwen3.6-35B-A3B (MoE)**
 
-MetadataLearn fine-tunes an open-weights **Qwen3.6-35B-A3B** model — a Mixture-of-Experts checkpoint (~3B active params per token) — to generate concise, grounded **dataset cards** straight from raw tabular metadata (column names, types, sample values). Loaded in 4-bit with a LoRA adapter, the base is ~20 GB of weights and trains on a single high-memory GPU (e.g. an H200), giving teams a zero-API-cost, fully private documentation tool. The whole pipeline lives in four notebooks.
+This tool fine-tunes an open-weights **Qwen3.6-35B-A3B** model — a Mixture-of-Experts checkpoint (~3B active params per token) — to generate concise, grounded **dataset cards** straight from raw tabular metadata (column names, types, sample values). Loaded in 4-bit with a LoRA adapter, the base is ~20 GB of weights and trains on a single high-memory GPU (e.g. an H200), giving teams a zero-API-cost, fully private documentation tool. The whole pipeline lives in four notebooks.
 
 ## Why
 
@@ -33,10 +33,12 @@ Data-prep cells (`# @dryrun`) are pure Python; on Colab each notebook re-roots p
 
 GPU steps were developed on an H200. The 35B MoE in 4-bit (~20 GB) needs a high-memory GPU — a Colab T4 (16 GB) is not enough; point `MODEL_ID` at a smaller checkpoint to experiment there. Set `LORA_ATTENTION_ONLY=True` for a lighter, faster run.
 
-1. Add a Hugging Face token (`HF_TOKEN`, read scope) to `.env` to pull Qwen 3 weights. `.env` is gitignored.
-2. Run `build_metadata_store.ipynb` → `all_metadata.json`.
+The sponsor **golden allowlist** (`FourMusketeersCapstone_DatasetsWithSolidMetadata(DataWA)_*.xlsx`) is the eval-anchor input. Keep it in the project root before step 2 so `build_metadata_store.ipynb` can tag those datasets `golden` — only the UID column is read (the stored descriptions are stale; the latest metadata is fetched live). Golden datasets are held out of training and scored separately as the gold benchmark in step 4. Set `GOLDEN_XLSX = None` to skip the anchor entirely.
+
+1. Add a Hugging Face token (`HF_TOKEN`, read scope) to `.env` to pull the Qwen weights. `.env` is gitignored.
+2. Run `build_metadata_store.ipynb` → `all_metadata.json` (tags the golden datasets if the allowlist xlsx is present).
 3. Run `finetune_descriptions.ipynb` → `splits.json`, SFT/DPO data, and `adapters/qwen3.6-35b-a3b-desc-dpo/`.
-4. Run `evaluate_descriptions.ipynb` → baseline vs. fine-tuned metrics (`comparison_results.json`).
+4. Run `evaluate_descriptions.ipynb` → baseline vs. fine-tuned metrics (`comparison_results.json`), plus a gold benchmark on the golden datasets.
 5. Run `demo.ipynb` (e.g. `f6w7-q2d2` @ `data.wa.gov`) to compare and export a dataset card.
 
 Dependencies: `transformers>=4.51`, `trl>=0.12`, `peft>=0.13`, `bitsandbytes>=0.45`, `datasets>=2.20`, `accelerate>=0.34`, `rouge-score`, `bert-score`, `pandas`. Each GPU notebook installs these in its first cell.
