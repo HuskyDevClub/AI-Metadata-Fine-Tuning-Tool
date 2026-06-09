@@ -26,7 +26,7 @@ One adapter trains a single task — **`column_description`**: given the dataset
 | `finetune_descriptions.ipynb` | Builds the split + SFT/DPO data, runs SFT then DPO → final adapter. | Yes |
 | `evaluate_descriptions.ipynb` | Runs baseline (adapter off) and fine-tuned (adapter on) on the test split, renders side-by-side tables. | Yes |
 
-Data-prep cells (`# @dryrun`) are pure Python; on Colab each notebook re-roots paths under a Drive `PROJECT_DIR` so artifacts persist.
+Data-prep cells are pure Python; on Colab each notebook re-roots paths under a Drive `PROJECT_DIR` so artifacts persist.
 
 ## Getting started
 
