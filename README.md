@@ -32,9 +32,18 @@ Data-prep cells are pure Python; on Colab each notebook re-roots paths under a D
 
 GPU steps were developed on an H200. The 35B MoE in 4-bit (~20 GB) needs a high-memory GPU — a Colab T4 (16 GB) is not enough; point `MODEL_ID` at a smaller checkpoint to experiment there. Set `LORA_ATTENTION_ONLY=True` for a lighter, faster run.
 
+**Running off Colab (local machine or remote GPU server).** Each notebook auto-detects the absence of Colab and keeps everything on the local disk — no Drive mount, no upload widgets. By default artifacts and the Hugging Face cache live in the current directory; export `PROJECT_DIR` to put them elsewhere (handy for a scratch/data volume on a server):
+
+```bash
+export PROJECT_DIR=/data/metadata-finetune   # artifacts + hf_cache live here
+export HF_TOKEN=hf_xxx                        # or keep it in .env (see below)
+```
+
+The same `PROJECT_DIR` is shared by all three notebooks, so the crawl, training, and eval read and write the same folder.
+
 The sponsor **golden allowlist** (`FourMusketeersCapstone_DatasetsWithSolidMetadata(DataWA)_*.xlsx`) is the eval-anchor input. Keep it in the project root before step 2 so `build_metadata_store.ipynb` can tag those datasets `golden` — only the UID column is read (the stored descriptions are stale; the latest metadata is fetched live). Golden datasets are held out of training and scored separately as the gold benchmark in step 4. Set `GOLDEN_XLSX = None` to skip the anchor entirely.
 
-1. Add a Hugging Face token (`HF_TOKEN`, read scope) to `.env` to pull the Qwen weights. `.env` is gitignored.
+1. Add a Hugging Face token (`HF_TOKEN`, read scope) to pull the (gated) Gemma weights — either export it in the environment or put it in `.env` (the GPU notebooks read `HF_TOKEN=` from `.env` in the cwd or `PROJECT_DIR`). `.env` is gitignored.
 2. Run `build_metadata_store.ipynb` → `all_metadata.json` (tags the golden datasets if the allowlist xlsx is present).
 3. Run `finetune_descriptions.ipynb` → `splits.json`, SFT/DPO data, and `adapters/qwen3.6-35b-a3b-coldesc-dpo/`.
 4. Run `evaluate_descriptions.ipynb` → baseline vs. fine-tuned metrics (`comparison_results.json`), plus a gold benchmark on the golden datasets.
