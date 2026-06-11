@@ -218,3 +218,21 @@ __marimo__/
 .streamlit/secrets.toml
 
 **/.*/
+
+# ---- Pipeline artifacts ----
+# Off Colab, PROJECT_DIR defaults to "." (this repo), so a run would otherwise
+# dump the crawl, the HF cache (tens of GB), adapters, and results into git.
+metadata_store/
+all_metadata.json
+splits.json
+sft_data/
+adapters/
+hf_cache/
+baseline_predictions.jsonl
+eval_predictions.jsonl
+baseline_results.json
+eval_results.json
+comparison_results.json
+
+# Sponsor golden allowlist — keep sponsor data out of git
+*.xlsx
