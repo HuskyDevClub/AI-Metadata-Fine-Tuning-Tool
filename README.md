@@ -2,6 +2,8 @@ AI-Metadata-Fine-Tuning-Tool
 
 **Automated Column-Description Generation — Fine-Tuning Gemma-4-12B-it**
 
+> Part of the **Capstone Technical Reports — The Four Musketeers** workspace on Notion.
+
 This tool fine-tunes the open-weights, instruction-tuned **Gemma-4-12B-it** model (`google/gemma-4-12B-it`, the Gemma 4 "12B Unified" checkpoint — multimodal but with no separate vision tower; only the language model is adapted) to generate concise, grounded **column descriptions** for tabular datasets straight from raw column metadata (names, types, per-column statistics, and sample values). The training prompt is aligned 1:1 with the production **AI Metadata Improvement Tool**: `prompts/system.md` + `prompts/column.md` are loaded from that repo's checkout when present (falling back to this repo's committed `prompts/` copies, then to embedded strings) and filled as real `{token}` templates — with the production sanitizers mirrored — so the adapter drops straight into that tool's column endpoint. Loaded in 4-bit with a LoRA adapter, the base is ~8 GB of weights and trains on a single 24 GB consumer GPU (e.g. an RTX 4090), giving teams a zero-API-cost, fully private documentation tool. The whole pipeline lives in three notebooks.
 
 ## Why
