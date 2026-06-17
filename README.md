@@ -4,7 +4,7 @@ AI-Metadata-Fine-Tuning-Tool
 
 > Part of the **Capstone Technical Reports — The Four Musketeers** workspace on Notion.
 
-This tool fine-tunes the open-weights, instruction-tuned **Phi-4** model (`microsoft/phi-4`, Microsoft's 14B MIT-licensed `Phi3ForCausalLM` — a dense, text-only, non-thinking decoder) to generate concise, grounded **column descriptions** for tabular datasets straight from raw column metadata (names, types, per-column statistics, and sample values). The training prompt is aligned 1:1 with the production **AI Metadata Improvement Tool**: `prompts/system.md` + `prompts/column.md` are loaded from that repo's checkout when present (falling back to this repo's committed `prompts/` copies, then to embedded strings) and filled as real `{token}` templates — with the production sanitizers mirrored — so the adapter drops straight into that tool's column endpoint. Loaded in 4-bit with a LoRA adapter, the base is ~9 GB of weights and trains on a single 24 GB consumer GPU (e.g. an RTX 4090), giving teams a zero-API-cost, fully private documentation tool. The whole pipeline lives in three notebooks.
+This tool fine-tunes the open-weights, instruction-tuned **Phi-4** model (`microsoft/phi-4`, Microsoft's 14B MIT-licensed `Phi3ForCausalLM` — a dense, text-only, non-thinking decoder) to generate concise, grounded **column descriptions** for tabular datasets straight from raw column metadata (names, types, per-column statistics, and sample values). The training prompt is aligned 1:1 with the production **AI Metadata Improvement Tool**: `prompts/system.md` + `prompts/column.md` are loaded from that repo's checkout when present (falling back to this repo's committed `prompts/` copies, then to embedded strings) and filled as real `{token}` templates — with the production sanitizers mirrored — so the adapter drops straight into that tool's column endpoint. Loaded in 4-bit with a LoRA adapter, the base is ~9 GB of weights and trains on a single H100 80 GB, giving teams a zero-API-cost, fully private documentation tool. The whole pipeline lives in three notebooks.
 
 ## Why
 
@@ -34,7 +34,7 @@ Data-prep cells are pure Python; on Colab each notebook re-roots paths under a D
 
 ## Getting started
 
-The dense 14B in 4-bit (~9 GB) fits a single 24 GB consumer GPU (e.g. an RTX 4090); the lighter MIT-licensed `microsoft/Phi-4-mini-instruct` (4B, 128K context) runs on a free Colab T4 — point `MODEL_ID` there to experiment. Set `LORA_ATTENTION_ONLY=True` for a lighter, faster run.
+The default batch settings (effective batch 16) target a single H100 80 GB; the 4-bit model is ~9 GB of weights. Set `LORA_ATTENTION_ONLY=True` for a lighter, faster run.
 
 **Running off Colab (local machine or remote GPU server).** Each notebook auto-detects the absence of Colab and keeps everything on the local disk — no Drive mount, no upload widgets. By default artifacts and the Hugging Face cache live in the current directory; export `PROJECT_DIR` to put them elsewhere (handy for a scratch/data volume on a server):
 
@@ -53,18 +53,3 @@ The sponsor **golden allowlist** (`FourMusketeersCapstone_DatasetsWithSolidMetad
 4. Run `evaluate_descriptions.ipynb` → baseline vs. fine-tuned metrics (`comparison_results.json`), plus the gold benchmark and the novel-target subset.
 
 Dependencies: `transformers>=5.11` (the v5 API the notebooks use; phi-4's `phi3` architecture loads on 4.40+), `trl>=0.12`, `peft>=0.13`, `bitsandbytes>=0.45`, `datasets>=2.20`, `accelerate>=0.34`, `rouge-score`, `bert-score`, `pandas`. Each GPU notebook installs these in its first cell.
-
-## Results
-
-> ⚠️ The table below is from the original **Qwen3-8B**, two-task run (dataset + column), kept for reference only. The pipeline now trains the **column description** task alone with the `column.md`-aligned prompt — so the **Column desc.** row is the relevant one, and the **Dataset desc.** row reflects the retired task. Re-run `evaluate_descriptions.ipynb` after fine-tuning `Phi-4` with the updated prompts (plus the gold benchmark, novel-target subset, and WA plain-language checks) to refresh these numbers.
-
-Fine-tuned model (`Qwen/Qwen3-8B` + `qwen3-8b-desc-dpo`) vs. untuned baseline on 58 held-out test datasets. Verbosity threshold = 15% over the human-written reference length.
-
-| Variant        | Task          | ROUGE-1   | ROUGE-L   | BERTScore F1 | Length Ratio | % Over    |
-| -------------- | ------------- | --------- | --------- | ------------ | ------------ | --------- |
-| Baseline       | Overall       | 0.268     | 0.220     | 0.179        | 3.13×        | 73.4%     |
-| **Fine-tuned** | Overall       | **0.661** | **0.634** | **0.629**    | **1.14×**    | **20.3%** |
-|                | Dataset desc. | 0.508     | 0.453     | 0.415        | 1.58×        | 34.5%     |
-|                | Column desc.  | 0.675     | 0.651     | 0.648        | 1.10×        | 19.0%     |
-
-Every metric improved: the model became **both more faithful and far more concise**, cutting over-length outputs from ~3/4 to ~1/5 of the test set. Since brevity shrinks the surface area for hallucination, the two gains reinforce each other.
